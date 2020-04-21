@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
-	"github.com/Baozisoftware/qrcode-terminal-go"
-	"github.com/Rhymen/go-whatsapp"
 	"os"
 	"time"
+
+	"github.com/Rhymen/go-whatsapp/binary/proto"
+
+	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
+	"github.com/Rhymen/go-whatsapp"
 )
 
 func main() {
@@ -25,16 +28,31 @@ func main() {
 
 	<-time.After(3 * time.Second)
 
+	previousMessage := "😘"
+	quotedMessage := proto.Message{
+		Conversation: &previousMessage,
+	}
+
+	ContextInfo := whatsapp.ContextInfo{
+		QuotedMessage:   &quotedMessage,
+		QuotedMessageID: "",
+		Participant:     "", //Whot sent the original message
+	}
+
 	msg := whatsapp.TextMessage{
 		Info: whatsapp.MessageInfo{
 			RemoteJid: "number@s.whatsapp.net",
 		},
-		Text: "Message sent by github.com/Rhymen/go-whatsapp",
+		ContextInfo: ContextInfo,
+		Text:        "Message sent by github.com/Rhymen/go-whatsapp",
 	}
 
-	err = wac.Send(msg)
+	msgId, err := wac.Send(msg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error sending message: %v", err)
+		os.Exit(1)
+	} else {
+		fmt.Println("Message Sent -> ID : " + msgId)
 	}
 }
 
@@ -43,7 +61,7 @@ func login(wac *whatsapp.Conn) error {
 	session, err := readSession()
 	if err == nil {
 		//restore session
-		session, err = wac.RestoreSession(session)
+		session, err = wac.RestoreWithSession(session)
 		if err != nil {
 			return fmt.Errorf("restoring failed: %v\n", err)
 		}

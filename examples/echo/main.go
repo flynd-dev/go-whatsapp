@@ -34,17 +34,17 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 		Text: message.Text,
 	}
 
-	if err := wh.wac.Send(msg); err != nil {
+	if _, err := wh.wac.Send(msg); err != nil {
 		fmt.Fprintf(os.Stderr, "error sending message: %v\n", err)
 	}
 
-	fmt.Printf("echoed message '%v' to user %v", message.Text, message.Info.RemoteJid)
+	fmt.Printf("echoed message '%v' to user %v\n", message.Text, message.Info.RemoteJid)
 }
 
 func login(wac *whatsapp.Conn) error {
 	session, err := readSession()
 	if err == nil {
-		session, err = wac.RestoreSession(session)
+		session, err = wac.RestoreWithSession(session)
 		if err != nil {
 			return fmt.Errorf("restoring session failed: %v", err)
 		}
